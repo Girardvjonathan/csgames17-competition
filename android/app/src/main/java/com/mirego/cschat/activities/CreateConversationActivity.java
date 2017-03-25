@@ -8,6 +8,7 @@ import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.ViewGroup;
@@ -16,10 +17,15 @@ import android.widget.Toast;
 import com.mirego.cschat.CSChatApplication;
 import com.mirego.cschat.R;
 import com.mirego.cschat.adapters.ConversationAdapter;
+import com.mirego.cschat.adapters.CreateConversationAdapter;
 import com.mirego.cschat.controller.ConversationsController;
+import com.mirego.cschat.controller.CreateConversationController;
 import com.mirego.cschat.controller.LoginController;
+import com.mirego.cschat.models.User;
 import com.mirego.cschat.viewdatas.ConversationViewData;
+import com.mirego.cschat.viewdatas.UserViewData;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -32,60 +38,57 @@ import io.reactivex.annotations.NonNull;
 import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
 
-public class ConversationsActivity extends BaseActivity implements ConversationAdapter.ConversationAdapterListener {
+public class CreateConversationActivity extends BaseActivity implements CreateConversationAdapter.CreateConversationAdapterListener {
 
-    @BindView(R.id.conversations_root)
+    @BindView(R.id.create_conversation_root)
     ViewGroup root;
 
-    @BindView(R.id.rv_conversations)
-    RecyclerView rvConversations;
+    @BindView(R.id.rv_create_conversation)
+    RecyclerView rvCreateConversation;
 
     @BindView(R.id.toolbar)
     Toolbar toolbar;
 
     @Inject
-    ConversationsController conversationsController;
+    CreateConversationController createConversationController;
 
-    @Inject
-    LoginController loginController;
-
-    private ConversationAdapter conversationAdapter;
+    private CreateConversationAdapter createConversationAdapter;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_conversations);
+        setContentView(R.layout.activity_create_conversation);
         ((CSChatApplication) getApplication()).component().inject(this);
         ButterKnife.bind(this);
 
         setSupportActionBar(toolbar);
-        toolbar.setTitle(getString(R.string.conversations_title));
-        configureConversationsRecyclerView();
+        toolbar.setTitle(getString(R.string.create_conversation_title));
+        configureCreateConversationRecyclerView();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        fetchConversations();
+        fetchUsers();
     }
 
-    private void configureConversationsRecyclerView() {
-        conversationAdapter = new ConversationAdapter(this, this);
-        rvConversations.setLayoutManager(new LinearLayoutManager(this));
+    private void configureCreateConversationRecyclerView() {
+        createConversationAdapter = new CreateConversationAdapter(this, this);
+        rvCreateConversation.setLayoutManager(new LinearLayoutManager(this));
         DividerItemDecoration itemDecoration = new DividerItemDecoration(this, DividerItemDecoration.VERTICAL);
         itemDecoration.setDrawable(getResources().getDrawable(R.drawable.list_spacing, null));
-        rvConversations.addItemDecoration(itemDecoration);
-        rvConversations.setAdapter(conversationAdapter);
+        rvCreateConversation.addItemDecoration(itemDecoration);
+        rvCreateConversation.setAdapter(createConversationAdapter);
     }
 
-    private void fetchConversations() {
-        conversationsController.getConversations()
+    private void fetchUsers() {
+        createConversationController.getUsers()
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.newThread())
-                .subscribe(new Consumer<List<ConversationViewData>>() {
+                .subscribe(new Consumer<List<UserViewData>>() {
                     @Override
-                    public void accept(@NonNull List<ConversationViewData> conversationViewDatas) throws Exception {
-                        conversationAdapter.populateConversations(conversationViewDatas);
+                    public void accept(@NonNull List<UserViewData> userViewDatas) throws Exception {
+                        createConversationAdapter.populateUsers(userViewDatas);
                     }
                 }, new Consumer<Throwable>() {
                     @Override
@@ -96,31 +99,10 @@ public class ConversationsActivity extends BaseActivity implements ConversationA
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_conversations, menu);
-        return true;
+    public void onUserClicked(UserViewData userViewData) {
+        List<User> users = new ArrayList<User>();
+        //users.add(stor);
+        //startActivity(ConversationActivity.intent(this, userViewData.getUser().getId()));
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-        if (id == R.id.action_logout) {
-            loginController.logout();
-            Intent intent = new Intent(this, HomeActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            startActivity(intent);
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
-
-    @OnClick(R.id.fab_add_conversation)
-    public void onAddConversationClicked() {
-        startActivity(new Intent(this, CreateConversationActivity.class));
-    }
-
-    @Override
-    public void onConversationClicked(ConversationViewData conversationViewData) {
-        startActivity(ConversationActivity.intent(this, conversationViewData.id()));
-    }
 }

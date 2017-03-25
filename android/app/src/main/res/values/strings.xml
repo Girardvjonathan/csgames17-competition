@@ -13,6 +13,7 @@
     <string name="login">Login</string>
     <string name="register">Register</string>
     <string name="conversations_title">Conversations</string>
+    <string name="create_conversation_title">Create conversaton</string>
     <string name="conversation_title">Conversation</string>
     <string name="login_error">Invalid username or password</string>
     <string name="register_error">Invalid username</string>
