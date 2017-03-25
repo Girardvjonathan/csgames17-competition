@@ -1,6 +1,7 @@
 package com.mirego.cschat.activities;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
@@ -15,6 +16,7 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import com.mirego.cschat.CSChatApplication;
+import com.mirego.cschat.Prefs;
 import com.mirego.cschat.R;
 import com.mirego.cschat.adapters.ConversationAdapter;
 import com.mirego.cschat.adapters.CreateConversationAdapter;
@@ -22,6 +24,8 @@ import com.mirego.cschat.controller.ConversationsController;
 import com.mirego.cschat.controller.CreateConversationController;
 import com.mirego.cschat.controller.LoginController;
 import com.mirego.cschat.models.User;
+import com.mirego.cschat.models.request.CreateConversationRequest;
+import com.mirego.cschat.models.response.ConversationsResponse;
 import com.mirego.cschat.viewdatas.ConversationViewData;
 import com.mirego.cschat.viewdatas.UserViewData;
 
@@ -37,6 +41,8 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.annotations.NonNull;
 import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
+
+import static android.support.design.widget.Snackbar.LENGTH_SHORT;
 
 public class CreateConversationActivity extends BaseActivity implements CreateConversationAdapter.CreateConversationAdapterListener {
 
@@ -100,9 +106,24 @@ public class CreateConversationActivity extends BaseActivity implements CreateCo
 
     @Override
     public void onUserClicked(UserViewData userViewData) {
-        List<User> users = new ArrayList<User>();
-        //users.add(stor);
-        //startActivity(ConversationActivity.intent(this, userViewData.getUser().getId()));
+        List<String> userIds = new ArrayList<String>();
+        userIds.add(userViewData.getUser().getId());
+        userIds.add(userViewData.getCurrentUserId());
+
+        createConversationController.createConversation(new CreateConversationRequest(userIds))
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.newThread())
+                .subscribe(new Consumer<ConversationViewData>() {
+                    @Override
+                    public void accept(@NonNull ConversationViewData conversationViewData) throws Exception {
+                        startActivity(ConversationActivity.intent(CreateConversationActivity.this, conversationViewData.id()));
+                    }
+                }, new Consumer<Throwable>() {
+                    @Override
+                    public void accept(@NonNull Throwable throwable) throws Exception {
+                        Snackbar.make(root, R.string.network_error, LENGTH_SHORT).show();
+                    }
+                });
     }
 
 }

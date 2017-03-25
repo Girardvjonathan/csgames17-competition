@@ -6,6 +6,7 @@ import android.util.Log;
 
 import com.mirego.cschat.models.Conversation;
 import com.mirego.cschat.models.User;
+import com.mirego.cschat.models.request.CreateConversationRequest;
 import com.mirego.cschat.models.response.ConversationsResponse;
 import com.mirego.cschat.models.response.UsersResponse;
 import com.mirego.cschat.services.CSChatService;
@@ -40,10 +41,20 @@ public class CreateConversationController {
                         List<UserViewData> userViewDatum = new ArrayList<>();
                         for (User user : users) {
                             if(user.getId() != storageService.currentUserId()){
-                                userViewDatum.add(new UserViewData(user, context));
+                                userViewDatum.add(new UserViewData(user, storageService.currentUserId(), context));
                             }
                         }
                         return userViewDatum;
+                    }
+                });
+    }
+
+    public Flowable<ConversationViewData> createConversation(CreateConversationRequest createConversationRequest) {
+        return chatService.createConversation(storageService.currentUserId(), createConversationRequest)
+                .map(new Function<ConversationsResponse, ConversationViewData>() {
+                    @Override
+                    public ConversationViewData apply(@NonNull ConversationsResponse conversationsResponse) throws Exception {
+                        return new ConversationViewData(conversationsResponse.getConversations().get(0), conversationsResponse.getUsers(), storageService.currentUserId(), context);
                     }
                 });
     }
