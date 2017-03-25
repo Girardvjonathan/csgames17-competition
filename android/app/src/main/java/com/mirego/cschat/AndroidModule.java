@@ -3,6 +3,7 @@ package com.mirego.cschat;
 import com.mirego.cschat.controller.ConversationController;
 import com.mirego.cschat.controller.ConversationsController;
 import com.mirego.cschat.controller.LoginController;
+import com.mirego.cschat.controller.RegisterController;
 import com.mirego.cschat.services.CSChatService;
 import com.mirego.cschat.services.StorageService;
 
@@ -27,8 +28,7 @@ class AndroidModule {
     @Singleton
     Retrofit provideRetrofit() {
         return new Retrofit.Builder()
-                // TODO: Changer pour votre propre serveur
-                .baseUrl("http://10.240.193.56:3000")
+                .baseUrl("https://cs-mirego.herokuapp.com")
                 .addConverterFactory(GsonConverterFactory.create())
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .build();
@@ -49,6 +49,11 @@ class AndroidModule {
     @Provides
     LoginController provideLoginController(CSChatService chatService, StorageService storageService) {
         return new LoginController(chatService, storageService);
+    }
+
+    @Provides
+    RegisterController provideRegisterController(CSChatService chatService, StorageService storageService) {
+        return new RegisterController(chatService, storageService);
     }
 
     @Provides
